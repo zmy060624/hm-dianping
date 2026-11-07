@@ -10,6 +10,7 @@
 | 持久层 | MyBatis-Plus 3.4.3、MySQL 5.7+ |
 | 缓存 | Redis（Lettuce 连接池） |
 | 分布式锁 | Redisson 3.13.6、自研 Redis 分布式锁（Lua 脚本释放） |
+| 接口文档 | Knife4j 3.0.3（springfox 3.0.0），在线调试 |
 | 工具 | Hutool、Lombok、AOP |
 
 ## 已实现功能
@@ -48,6 +49,18 @@
 - 好友关注与共同关注（`FollowServiceImpl`）
 - 附近商铺 GEO 检索
 - 用户签到（BitMap）与 UV 统计（HyperLogLog）
+
+## 接口文档
+
+集成 Knife4j，启动后访问：
+
+```
+http://localhost:8081/doc.html
+```
+
+- 左侧按 Controller 自动分组，共 18 个接口分组，可在线填参调试
+- 需要登录态的接口会返回 401：在「文档管理 → 全局参数」中添加请求头 `authorization`，值为登录接口返回的 Token
+- 文档相关的静态资源已在 `MvcConfig.excludePathPatterns` 中放行，否则会被登录拦截器拦下
 
 ## 项目结构
 
@@ -103,6 +116,37 @@ mvn spring-boot:run
 ```
 
 服务端口 `8081`。
+
+## 踩坑记录
+
+开发过程中遇到的几个真实问题，记录排查思路供参考。
+
+**1. 启动报 `A component required a bean of type 'RedissonClient' that could not be found`**
+
+顺着异常栈回溯到 `VoucherOrderServiceImpl` 的 `@Resource` 注入点，再检查 `RedissonConfig`，发现工厂方法上漏了 `@Bean`。
+`@Configuration` 只负责标记配置类，不会把类里的方法自动注册为 Bean——方法上没有 `@Bean` 就只是一个普通实例方法，容器里自然找不到这个 Bean。
+
+**2. 补上 `@Bean` 后立刻变成 `Redis url should start with redis://`**
+
+`setAddress()` 底层走 URI 解析，scheme 后面必须跟 `//`，写成 `redis:localhost:6379` 是非法的。
+值得记一笔的是：**因为之前方法根本没被执行，这个错误一直被掩盖着**。配置类里的方法不执行，不代表配置正确。两层问题要一层层扒。
+
+**3. 接口文档打不开，跳登录页或 404**
+
+`LoginInterceptor` 拦的是 `/**`，Knife4j 的文档页和静态资源也在拦截范围内。
+解决：在 `MvcConfig` 的 `excludePathPatterns` 中放行 `/doc.html`、`/webjars/**`、`/v2/api-docs`、`/swagger-resources/**`、`/favicon.ico`。
+
+**4. Spring Boot 2.6+ 与 springfox 3.0.0 不兼容（另一个项目的经验）**
+
+在 Spring Boot 2.7.3 项目里集成同类组件时，启动会抛 `Failed to start bean 'documentationPluginsBootstrapper'`。
+原因是 2.6 起默认改用 `PathPatternParser`，而 springfox 只认 `AntPathMatcher`。在 `application.yml` 中补一行即可：
+
+```yaml
+spring:
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+```
 
 ## 声明
 

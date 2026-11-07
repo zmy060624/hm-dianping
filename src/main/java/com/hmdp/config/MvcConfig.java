@@ -45,7 +45,13 @@ public class MvcConfig implements WebMvcConfigurer {
                         "/shop/**",         // 店铺查询、探店笔记分页（未登录也能看）
                         "/shop-type/**",    // 店铺分类
                         "/upload/**",       // 图片上传/静态资源
-                        "/voucher/**"       // 优惠券查询
+                        "/voucher/**",     // 优惠券查询
+                        "/doc.html",              // Knife4j 文档首页
+                        "/webjars/**",            // 文档依赖的静态资源
+                        "/v2/api-docs",           // 文档数据来源
+                        "/swagger-resources/**",  // 分组信息
+                        "/favicon.ico"
+
                 )
                 .order(1);
     }
