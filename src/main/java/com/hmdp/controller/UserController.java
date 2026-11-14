@@ -1,18 +1,25 @@
 package com.hmdp.controller;
 
 
+import cn.hutool.core.bean.BeanUtil;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.hmdp.dto.LoginFormDTO;
 import com.hmdp.dto.Result;
 import com.hmdp.dto.UserDTO;
+import com.hmdp.entity.Blog;
+import com.hmdp.entity.User;
 import com.hmdp.entity.UserInfo;
+import com.hmdp.service.IBlogService;
 import com.hmdp.service.IUserInfoService;
 import com.hmdp.service.IUserService;
+import com.hmdp.utils.SystemConstants;
 import com.hmdp.utils.UserHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpSession;
+import java.util.List;
 
 /**
  * <p>
@@ -32,7 +39,6 @@ public class UserController {
 
     @Resource
     private IUserInfoService userInfoService;
-
     /**
      * 发送手机验证码
      */
@@ -62,6 +68,10 @@ public class UserController {
         return Result.fail("功能未完成");
     }
 
+    /**
+     * 获取当前登录的用户信息
+     * @return 当前登录用户
+     */
     @GetMapping("/me")
     public Result me(){
         //获取当前登录的用户并返回
@@ -69,6 +79,11 @@ public class UserController {
         return Result.ok(user);
     }
 
+    /**
+     * 根据用户id查询用户详情（性别、城市、介绍、粉丝等）
+     * @param userId 用户id
+     * @return 用户详情
+     */
     @GetMapping("/info/{id}")
     public Result info(@PathVariable("id") Long userId){
         // 查询详情
@@ -82,4 +97,25 @@ public class UserController {
         // 返回
         return Result.ok(info);
     }
+
+    // UserController 根据id查询用户
+
+    /**
+     * 根据id查询用户基本信息（昵称、头像）
+     * @param userId 用户id
+     * @return 用户基本信息
+     */
+    @GetMapping("/{id}")
+    public Result queryUserById(@PathVariable("id") Long userId){
+        // 查询详情
+        User user = userService.getById(userId);
+        if (user == null) {
+            return Result.ok();
+        }
+        UserDTO userDTO = BeanUtil.copyProperties(user, UserDTO.class);
+        // 返回
+        return Result.ok(userDTO);
+    }
+
+
 }

@@ -17,6 +17,11 @@ import java.util.UUID;
 @RequestMapping("upload")
 public class UploadController {
 
+    /**
+     * 上传笔记图片
+     * @param image 上传的图片文件
+     * @return 保存后的图片相对路径
+     */
     @PostMapping("blog")
     public Result uploadImage(@RequestParam("file") MultipartFile image) {
         try {
@@ -34,6 +39,11 @@ public class UploadController {
         }
     }
 
+    /**
+     * 删除已上传的笔记图片
+     * @param filename 图片相对路径
+     * @return 无
+     */
     @GetMapping("/blog/delete")
     public Result deleteBlogImg(@RequestParam("name") String filename) {
         File file = new File(SystemConstants.IMAGE_UPLOAD_DIR, filename);
